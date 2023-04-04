@@ -1,0 +1,19 @@
+<launch>
+    <arg name="rtk_en" default="false" />
+    
+    <!-- <rosparam file="$(find fast_lio)/config/params.yaml" command="load" /> -->
+
+    <node  name="xsens_mti_node" pkg="xsens_mti_driver" type="xsens_mti_node" output="screen">
+        <rosparam command="load" file="$(find fast_lio)/config/xsens.yaml" />
+    </node>
+
+    <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch"/>
+
+    <include file="$(find nmea_navsat_driver)/launch/nmea_serial_driver.launch" if="$(arg rtk_en)">
+        <arg name="port" default="/dev/ttyUSB0"/>
+        <arg name="baud" default="115200"/>
+        <arg name="frame_id" default="rtk"/>
+        <remap from="/fix" to="rtk/fix"/>
+    </include>
+
+</launch>
