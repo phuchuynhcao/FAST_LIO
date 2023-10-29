@@ -307,10 +307,10 @@ void standard_pcl_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg)
         ROS_ERROR("lidar loop back, clear buffer");
         lidar_buffer.clear();
     }
-    ROS_INFO("Size of orignin point cloud: %ld\n", msg->data.size());
+    // ROS_INFO("Size of orignin point cloud: %ld\n", msg->data.size());
     PointCloudXYZI::Ptr  ptr(new PointCloudXYZI());
     p_pre->process(msg, ptr);
-    ROS_INFO("Size of point cloud: %ld\n", ptr->points.size());
+    // ROS_INFO("Size of point cloud: %ld\n", ptr->points.size());
     lidar_buffer.push_back(ptr);
     time_buffer.push_back(msg->header.stamp.toSec());
     last_timestamp_lidar = msg->header.stamp.toSec();
@@ -599,7 +599,7 @@ bool sync_packages(MeasureGroup &meas)
                 scan_num ++;
                 lidar_end_time = meas.lidar_beg_time + meas.lidar->points.back().curvature / double(1000);
                 lidar_mean_scantime += (meas.lidar->points.back().curvature / double(1000) - lidar_mean_scantime) / scan_num;
-                cout << "lidar_beg_time:" << meas.lidar_beg_time << "lidar_end_time:" << lidar_end_time << "lidar_mean_scantime:" << lidar_mean_scantime << endl;
+                // cout << "lidar_beg_time:" << meas.lidar_beg_time << "lidar_end_time:" << lidar_end_time << "lidar_mean_scantime:" << lidar_mean_scantime << endl;
             }
 
             meas.lidar_end_time = lidar_end_time;
@@ -622,7 +622,7 @@ bool sync_packages(MeasureGroup &meas)
                 scan_num ++;
                 lidar_begin_time = meas.lidar_end_time - meas.lidar->points.back().curvature / double(1000);
                 lidar_mean_scantime += (meas.lidar->points.back().curvature / double(1000) - lidar_mean_scantime) / scan_num;
-                cout << "lidar_beg_time:" << meas.lidar_beg_time << "lidar_end_time:" << meas.lidar_end_time << "lidar_mean_scantime:" << lidar_mean_scantime << endl;
+                // cout << "lidar_beg_time:" << meas.lidar_beg_time << "lidar_end_time:" << meas.lidar_end_time << "lidar_mean_scantime:" << lidar_mean_scantime << endl;
             }
 
             meas.lidar_beg_time = lidar_begin_time;

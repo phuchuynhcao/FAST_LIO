@@ -286,7 +286,7 @@ void Preprocess::velodyne_handler(const sensor_msgs::PointCloud2::ConstPtr &msg)
     pcl::PointCloud<velodyne_ros::Point> pl_orig;
     pcl::fromROSMsg(*msg, pl_orig);
     int plsize = pl_orig.points.size();
-    ROS_INFO("Size of orignin point cloud: %ld\n", plsize);
+    // ROS_INFO("Size of orignin point cloud: %ld\n", plsize);
     if (plsize == 0) return;
     pl_surf.reserve(plsize);
 
@@ -423,15 +423,16 @@ void Preprocess::velodyne_handler(const sensor_msgs::PointCloud2::ConstPtr &msg)
         added_pt.curvature = (pl_orig.points[i].time - pl_orig.points[0].time) * time_unit_scale;  // curvature unit: ms // cout<<added_pt.curvature<<endl;
         // added_pt.curvature = 0;
         // printf("pl_orig.points[i].time * time_unit_scale: %f\n", added_pt.curvature);
-        if (pl_orig.points[i].ring == 0)
-        {
-          counter++;
-          if (counter == 10)
-          {
-            ROS_INFO("Layer %d: origin curvature %f\n", pl_orig.points[i].ring, added_pt.curvature);
-            if (given_offset_time) counter = 0;
-          }
-        }
+
+        // if (pl_orig.points[i].ring == 0)
+        // {
+        //   counter++;
+        //   if (counter == 10)
+        //   {
+        //     ROS_INFO("Layer %d: origin curvature %f\n", pl_orig.points[i].ring, added_pt.curvature);
+        //     if (given_offset_time) counter = 0;
+        //   }
+        // }
 
         if (!given_offset_time)
         {
@@ -467,15 +468,16 @@ void Preprocess::velodyne_handler(const sensor_msgs::PointCloud2::ConstPtr &msg)
 
           yaw_last[layer] = yaw_angle;
           time_last[layer]=added_pt.curvature;
-          if (layer == 0)
-          {
-            if (counter == 10)
-            {
-              ROS_INFO("Layer %d: new curvature %f\n", layer, added_pt.curvature);
-              ROS_INFO("Layer %d: yaw_end %f\n", layer, yaw_last[layer]);
-              counter = 0;
-            }
-          }
+
+          // if (layer == 0)
+          // {
+          //   if (counter == 10)
+          //   {
+          //     ROS_INFO("Layer %d: new curvature %f\n", layer, added_pt.curvature);
+          //     ROS_INFO("Layer %d: yaw_end %f\n", layer, yaw_last[layer]);
+          //     counter = 0;
+          //   }
+          // }
         }
 
         if (i % point_filter_num == 0)
