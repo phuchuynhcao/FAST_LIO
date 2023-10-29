@@ -1833,6 +1833,7 @@ public:
 
 			if(t > 1 || i == maximum_iter - 1)
 			{
+				// ROS_INFO("iter %d", i);
 				L_ = P_;
 				//std::cout << "iteration time" << t << "," << i << std::endl; 
 				Matrix<scalar_type, 3, 3> res_temp_SO3;

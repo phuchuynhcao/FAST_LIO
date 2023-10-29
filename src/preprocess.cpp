@@ -169,9 +169,9 @@ void Preprocess::avia_handler(const livox_ros_driver::CustomMsg::ConstPtr &msg)
           pl_full[i].intensity = msg->points[i].reflectivity;
           pl_full[i].curvature = msg->points[i].offset_time / float(1000000); // use curvature as time of each laser points, curvature unit: ms
 
-          if((abs(pl_full[i].x - pl_full[i-1].x) > 1e-7) 
+          if(((abs(pl_full[i].x - pl_full[i-1].x) > 1e-7) 
               || (abs(pl_full[i].y - pl_full[i-1].y) > 1e-7)
-              || (abs(pl_full[i].z - pl_full[i-1].z) > 1e-7)
+              || (abs(pl_full[i].z - pl_full[i-1].z) > 1e-7))
               && (pl_full[i].x * pl_full[i].x + pl_full[i].y * pl_full[i].y + pl_full[i].z * pl_full[i].z > (blind * blind)))
           {
             pl_surf.push_back(pl_full[i]);
@@ -286,8 +286,11 @@ void Preprocess::velodyne_handler(const sensor_msgs::PointCloud2::ConstPtr &msg)
     pcl::PointCloud<velodyne_ros::Point> pl_orig;
     pcl::fromROSMsg(*msg, pl_orig);
     int plsize = pl_orig.points.size();
+    ROS_INFO("Size of orignin point cloud: %ld\n", plsize);
     if (plsize == 0) return;
     pl_surf.reserve(plsize);
+
+    int counter = 0;
 
     /*** These variables only works when no point timestamps given ***/
     double omega_l = 0.361 * SCAN_RATE;       // scan angular velocity
@@ -299,11 +302,17 @@ void Preprocess::velodyne_handler(const sensor_msgs::PointCloud2::ConstPtr &msg)
 
     if (pl_orig.points[plsize - 1].time > 0)
     {
-      given_offset_time = true;
+      if (given_offset_time_enabled == true)
+        given_offset_time = true;
+      else
+        given_offset_time = false;
     }
     else
     {
       given_offset_time = false;
+    }
+    if (given_offset_time == false)
+    {
       double yaw_first = atan2(pl_orig.points[0].y, pl_orig.points[0].x) * 57.29578;
       double yaw_end  = yaw_first;
       int layer_first = pl_orig.points[0].ring;
@@ -319,6 +328,7 @@ void Preprocess::velodyne_handler(const sensor_msgs::PointCloud2::ConstPtr &msg)
 
     if(feature_enabled)
     {
+      // ROS_INFO("feature enabled");
       for (int i = 0; i < N_SCANS; i++)
       {
         pl_buff[i].clear();
@@ -337,7 +347,8 @@ void Preprocess::velodyne_handler(const sensor_msgs::PointCloud2::ConstPtr &msg)
         added_pt.y = pl_orig.points[i].y;
         added_pt.z = pl_orig.points[i].z;
         added_pt.intensity = pl_orig.points[i].intensity;
-        added_pt.curvature = pl_orig.points[i].time * time_unit_scale; // units: ms
+        // added_pt.curvature = pl_orig.points[i].time * time_unit_scale; // units: ms
+        added_pt.curvature = (pl_orig.points[i].time - pl_orig.points[0].time) * time_unit_scale; // units: ms
 
         if (!given_offset_time)
         {
@@ -394,6 +405,7 @@ void Preprocess::velodyne_handler(const sensor_msgs::PointCloud2::ConstPtr &msg)
     }
     else
     {
+      // ROS_INFO("feature disabled");
       for (int i = 0; i < plsize; i++)
       {
         PointType added_pt;
@@ -406,7 +418,20 @@ void Preprocess::velodyne_handler(const sensor_msgs::PointCloud2::ConstPtr &msg)
         added_pt.y = pl_orig.points[i].y;
         added_pt.z = pl_orig.points[i].z;
         added_pt.intensity = pl_orig.points[i].intensity;
-        added_pt.curvature = pl_orig.points[i].time * time_unit_scale;  // curvature unit: ms // cout<<added_pt.curvature<<endl;
+        // printf("pl_orig.points[i].time: %f\n", pl_orig.points[i].time);
+        // added_pt.curvature = pl_orig.points[i].time * time_unit_scale;  // curvature unit: ms // cout<<added_pt.curvature<<endl;
+        added_pt.curvature = (pl_orig.points[i].time - pl_orig.points[0].time) * time_unit_scale;  // curvature unit: ms // cout<<added_pt.curvature<<endl;
+        // added_pt.curvature = 0;
+        // printf("pl_orig.points[i].time * time_unit_scale: %f\n", added_pt.curvature);
+        if (pl_orig.points[i].ring == 0)
+        {
+          counter++;
+          if (counter == 10)
+          {
+            ROS_INFO("Layer %d: origin curvature %f\n", pl_orig.points[i].ring, added_pt.curvature);
+            if (given_offset_time) counter = 0;
+          }
+        }
 
         if (!given_offset_time)
         {
@@ -421,6 +446,10 @@ void Preprocess::velodyne_handler(const sensor_msgs::PointCloud2::ConstPtr &msg)
               added_pt.curvature = 0.0;
               yaw_last[layer]=yaw_angle;
               time_last[layer]=added_pt.curvature;
+              if (layer == 0)
+                {
+                  ROS_INFO("Layer %d: yaw_end %f\n", layer, yaw_last[layer]);
+                }
               continue;
           }
 
@@ -438,6 +467,15 @@ void Preprocess::velodyne_handler(const sensor_msgs::PointCloud2::ConstPtr &msg)
 
           yaw_last[layer] = yaw_angle;
           time_last[layer]=added_pt.curvature;
+          if (layer == 0)
+          {
+            if (counter == 10)
+            {
+              ROS_INFO("Layer %d: new curvature %f\n", layer, added_pt.curvature);
+              ROS_INFO("Layer %d: yaw_end %f\n", layer, yaw_last[layer]);
+              counter = 0;
+            }
+          }
         }
 
         if (i % point_filter_num == 0)
@@ -448,6 +486,10 @@ void Preprocess::velodyne_handler(const sensor_msgs::PointCloud2::ConstPtr &msg)
           }
         }
       }
+      // for (int j = 0; j < 16; j++)
+      // {
+      //   ROS_INFO("Layer %d: yaw_start %f, yaw_end %f\n", j, yaw_fp[j], yaw_last[j]);
+      // }
     }
 }
 

@@ -98,7 +98,7 @@ class Preprocess
   float time_unit_scale;
   int lidar_type, point_filter_num, N_SCANS, SCAN_RATE, time_unit;
   double blind;
-  bool feature_enabled, given_offset_time;
+  bool feature_enabled, given_offset_time, given_offset_time_enabled;
   ros::Publisher pub_full, pub_surf, pub_corn;
     
 

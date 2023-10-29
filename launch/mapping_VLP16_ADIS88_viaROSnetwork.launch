@@ -1,0 +1,131 @@
+<launch>
+  <!-- Launch file for velodyne16 VLP-16 LiDAR -->
+
+    <arg name="rviz" default="true" />
+    <!-- Arguments -->
+    <arg name="gps_save_en" default="false" />
+    <arg name="imu_save_en" default="false" />
+    <arg name="odom_save_en" default="false" />
+
+    <rosparam command="load" file="$(find fast_lio)/config/velodyne_VLP16_imu_ADIS88.yaml" />
+
+    <param name="feature_extract_enable" type="bool" value="0"/>
+    <param name="point_filter_num" type="int" value="4"/>
+    <param name="max_iteration" type="int" value="3" />
+    <param name="filter_size_surf" type="double" value="0.5" />
+    <param name="filter_size_map" type="double" value="0.5" />
+    <param name="cube_side_length" type="double" value="1000" />
+    <param name="runtime_pos_log_enable" type="bool" value="0" />
+    <node pkg="fast_lio" type="fastlio_mapping" name="laserMapping" output="screen" args="$(arg gps_save_en) $(arg imu_save_en) $(arg odom_save_en)" /> 
+
+    <!--- Robot State TF -->
+    <!-- <include file="$(find fast_lio)/launch/include/module_robot_state_publisher.launch" /> -->
+
+    <!--- Run Navsat -->
+    <!-- <include file="$(find fast_lio)/launch/include/module_navsat.launch" >
+        <arg name="imu_topic" value="imu/data" />
+        <arg name="gnss_topic" value="gnss" />
+    </include> -->
+    <!-- <include file="$(find fast_lio)/launch/include/module_navsat.launch" >
+        <arg name="imu_topic" value="imu_correct" />
+        <arg name="gnss_topic" value="gnss" />
+    </include> -->
+
+    <!--  Transforms  -->
+    <!-- <node pkg="tf" type="static_transform_publisher"
+        name="gps_transform_imu_link"
+        args="0.0 0.0 0.0 0 0 0 base_link imu_link 10" /> -->
+    <!-- <node pkg="tf" type="static_transform_publisher"
+        name="map_transform_camera_init"
+        args="0.0 0.0 0.0 0 0 0 map camera_init 10" /> -->
+    <!-- <node pkg="tf" type="static_transform_publisher"
+        name="imu_link_transform_body"
+        args="0.0 -0.06 0.04 0 0 0 body base_link 10" /> -->
+    <!-- <node pkg="tf" type="static_transform_publisher"
+        name="body_transform_imu_link"
+        args="0.0 0.0 0.0 0 0 0 body imu_link 10" /> -->
+    <!-- <node pkg="tf" type="static_transform_publisher"
+        name="body_transform_imu_link"
+        args="0.0 0.0 0.0 0 0 0 body imu_link 10" /> -->
+
+    <!-- <node pkg="tf" type="static_transform_publisher"
+        name="body_00_imu_link"
+        args="0.0 0.0 0.0 0 0 0 base_link 00 10" />
+    <node pkg="tf" type="static_transform_publisher"
+        name="body_01_imu_link"
+        args="0.0 0.0 0.0 0 0 0 base_link 01 10" />
+    <node pkg="tf" type="static_transform_publisher"
+        name="body_02_imu_link"
+        args="0.0 0.0 0.0 0 0 0 base_link 02 10" />
+    <node pkg="tf" type="static_transform_publisher"
+        name="body_03_imu_link"
+        args="00.0 0.0 0.0 0 0 0 base_link 03 10" />
+    <node pkg="tf" type="static_transform_publisher"
+        name="body_04_imu_link"
+        args="0.0 0.0 0.0 0 0 0 base_link 04 10" />
+    <node pkg="tf" type="static_transform_publisher"
+        name="body_05_imu_link"
+        args="0.0 0.0 0.0 0 0 0 base_link 05 10" />
+    <node pkg="tf" type="static_transform_publisher"
+        name="body_06_imu_link"
+        args="0.0 0.0 0.0 0 0 0 imu_link 06 10" />
+    <node pkg="tf" type="static_transform_publisher"
+        name="body_07_imu_link"
+        args="0.0 0.0 0.0 0 0 0 base_link 07 10" />
+    <node pkg="tf" type="static_transform_publisher"
+        name="body_08_imu_link"
+        args="0.0 0.0 0.0 0 0 0 base_link 08 10" />
+    <node pkg="tf" type="static_transform_publisher"
+        name="body_09_imu_link"
+        args="0.0 0.0 0.0 0 0 0 base_link 09 10" />
+    <node pkg="tf" type="static_transform_publisher"
+        name="body_10_imu_link"
+        args="0.0 -0.06 0.04 0 0 0 base_link 10 10" />
+    <node pkg="tf" type="static_transform_publisher"
+        name="body_11_imu_link"
+        args="0.0 0.0 0.0 0 0 0 base_link 11 10" />
+    <node pkg="tf" type="static_transform_publisher"
+        name="body_12_imu_link"
+        args="0.0 0.0 0.0 0 0 0 base_link 12 10" />
+    <node pkg="tf" type="static_transform_publisher"
+        name="body_13_imu_link"
+        args="0.0 0.0 0.0 0 0 0 base_link 13 10" />
+    <node pkg="tf" type="static_transform_publisher"
+        name="body_14_imu_link"
+        args="0.0 0.0 0.0 0 0 0 base_link 14 10" />
+    <node pkg="tf" type="static_transform_publisher"
+        name="body_15_imu_link"
+        args="0.0 0.0 0.0 0 0 0 base_link 15 10" />
+    <node pkg="tf" type="static_transform_publisher"
+        name="body_16_imu_link"
+        args="0.0 0.0 0.0 0 0 0 base_link 16 10" />
+    <node pkg="tf" type="static_transform_publisher"
+        name="body_17_imu_link"
+        args="0.0 0.0 0.0 0 0 0 base_link 17 10" />
+    <node pkg="tf" type="static_transform_publisher"
+        name="body_18_imu_link"
+        args="0.0 0.0 0.0 0 0 0 base_link 18 10" />
+    <node pkg="tf" type="static_transform_publisher"
+        name="body_19_imu_link"
+        args="0.0 0.0 0.0 0 0 0 base_link 19 10" />
+    <node pkg="tf" type="static_transform_publisher"
+        name="body_20_imu_link"
+        args="0.0 0.0 0.0 0 0 0 base_link 20 10" />
+    <node pkg="tf" type="static_transform_publisher"
+        name="body_21_imu_link"
+        args="0.0 0.0 0.0 0 0 0 base_link 21 10" />
+    <node pkg="tf" type="static_transform_publisher"
+        name="body_22_imu_link"
+        args="0.0 0.0 0.0 0 0 0 base_link 22 10" />
+    <node pkg="tf" type="static_transform_publisher"
+        name="body_23_imu_link"
+        args="0.0 0.0 0.0 0 0 0 base_link 23 10" />
+    <node pkg="tf" type="static_transform_publisher"
+        name="body_24_imu_link"
+        args="0.0 0.0 0.0 0 0 0 base_link 24 10" /> -->
+
+    <group if="$(arg rviz)">
+    <node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz" args="-d $(find fast_lio)/rviz_cfg/loam_livox.rviz" />
+    </group>
+
+</launch>

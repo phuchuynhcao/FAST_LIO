@@ -1,6 +1,8 @@
 <launch>
     <arg name="rtk_en" default="false" />
-    
+    <arg name="dataset_directory" value="$(find fast_lio)/Dataset"/>
+    <arg name="is_record_odom" default="false"/>
+    <arg name="is_record_velodyne" default="false"/>
     <!-- <rosparam file="$(find fast_lio)/config/params.yaml" command="load" /> -->
 
     <node  name="xsens_mti_node" pkg="xsens_mti_driver" type="xsens_mti_node" output="screen">
@@ -16,4 +18,8 @@
         <remap from="/fix" to="rtk/fix"/>
     </include>
 
+    <!-- Record bag -->
+    <node name="bag_record" pkg="rosbag" type="record"
+        args="record -o $(arg dataset_directory)/bag /imu/data /fix_rtk /gnss /velodyne_points"
+        if="$(eval is_record_velodyne or is_record_odom)"/>
 </launch>

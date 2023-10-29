@@ -2,8 +2,7 @@
   <!-- Launch file for velodyne16 VLP-16 LiDAR -->
     <arg name="project" default="fast_lio"/>
     <arg name="rviz" default="true" />
-    <arg name="is_record_odom" default="true"/>
-    <arg name="is_record_velodyne" default="true"/>
+    <arg name="is_recorded" default="true"/>
     <arg name="dataset_directory" value="$(find fast_lio)/Dataset"/>
 
     <rosparam command="load" file="$(find fast_lio)/config/velodyne_private_data.yaml" />
@@ -17,11 +16,14 @@
     <param name="runtime_pos_log_enable" type="bool" value="0" />
 
     <!-- Run sensor driver -->
-    <include file="$(find fast_lio)/launch/include/sensors.launch" />
+    <include file="$(find fast_lio)/launch/include/sensors_VLP16_ADIS_CAM.launch" />
 
     <!-- Record bag -->
+    <!-- <node name="bag_record" pkg="rosbag" type="record"
+        args="record -o $(arg dataset_directory)/bag /fix_rtk /gnss /imu/data /velodyne_points /imu0 /cam0/image_raw /cam1/image_raw"
+        if="$(eval is_record_velodyne or is_record_odom)"/> -->
     <node name="bag_record" pkg="rosbag" type="record"
-        args="record -o $(arg dataset_directory)/bag /fix_rtk /gnss /imu/data /velodyne_points"
+        args="record -o $(arg dataset_directory)/bag /velodyne_points /imu0 /cam0/image_raw /cam1/image_raw"
         if="$(eval is_record_velodyne or is_record_odom)"/>
 
     <!-- Run fast_lio package -->

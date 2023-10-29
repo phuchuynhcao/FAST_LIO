@@ -1,49 +1,54 @@
 common:
-    #lid_topic:  "/velodyne_points"
-    #imu_topic:  "/imu/data"
-    lid_topic:  "/points_raw"
-    imu_topic:  "/imu_raw" # LIO-SAM dataset
+    lid_topic:  "/velodyne_points" # private data at HCMUT
+    imu_topic:  "/imu0"         # private data at HCMUT
+    # gps_topic:  "/gnss"         # GPS topic of XSENS
+    gps_topic:  "/fix"          # GPS topic of S82
     time_sync_en: false         # ONLY turn on when external time synchronization is really not possible
     time_offset_lidar_to_imu: 0.0 # Time offset between lidar and IMU calibrated by other algorithms, e.g. LI-Init (can be found in README).
                                   # This param will take effect no matter what time_sync_en is. So if the time offset is not known exactly, please set as 0.0
-    baselinkFrame: "base_link"
-    odometryFrame: "odom"
-    mapFrame: "map"
 
 preprocess:
     lidar_type: 2                # 1 for Livox serials LiDAR, 2 for Velodyne LiDAR, 3 for ouster LiDAR, 
     scan_line: 16
     scan_rate: 10                # only need to be set for velodyne, unit: Hz,
-    timestamp_unit: 2            # the unit of time/t field in the PointCloud2 rostopic: 0-second, 1-milisecond, 2-microsecond, 3-nanosecond.
+    timestamp_unit: 0            # the unit of time/t field in the PointCloud2 rostopic: 0-second, 1-milisecond, 2-microsecond, 3-nanosecond.
+                                 # default: 2
     blind: 2
 
 mapping:
-    acc_cov: 3.9939570888238808e-03
-    gyr_cov: 1.5636343949698187e-03
-    b_acc_cov: 6.4356659353532566e-05
-    b_gyr_cov: 3.5640318696367613e-05
+    acc_cov: 0.1                  # default:0.1
+    gyr_cov: 0.1                  # default: 0.1
+    b_acc_cov: 0.0001             # default: 0.0001
+    b_gyr_cov: 0.0001             # default: 0.0001
+    # acc_cov: 8.0e-3                 # default:0.1
+    # gyr_cov: 12.0e-4                  # default: 0.1
+    # b_acc_cov: 4.0e-5             # default: 0.0001
+    # b_gyr_cov: 4.0e-6           # default: 0.0001
+    laser_point_cov: 0.001        # default: 0.001
+    # laser_point_cov: 0.00001
     fov_degree:    180
     det_range:     100.0
+    max_iteration: 4              # default: 4
+    epsi_threshold: 0.001         # default: 0.001
+    feature_extract_enable: false # default: false
+    given_offset_time_enabled: true  # default: false
     extrinsic_est_en:  false      # true: enable the online estimation of IMU-LiDAR extrinsic,
-    extrinsic_T: [ 0, 0, 0]
-    extrinsic_R: [-1, 0, 0, 
-                   0, 1, 0, 
-                   0, 0,-1]
-    # extrinsicRPY: [ -1, 0, 0, 
-    #                0, -1, 0, 
-    #                0, 0, 1]
-    extrinsicRPY: [0, -1, 0,
-                   1, 0, 0,
+    extrinsic_T: [ -0.01, 0.00, 0.1448]
+    extrinsic_R: [ 0,-1, 0, 
+                   1, 0, 0, 
                    0, 0, 1]
-    # extrinsicRPY: [0, 1, 0,
-    #                -1, 0, 0,
-    #                0, 0, -1]
+    extrinsicRPY: [1, 0, 0,
+                   0,  1, 0,
+                   0,  0, 1]
 
 publish:
     path_en:  true
+    path_ENUgps_en: false
+    odom_ENUgps_en: true
     scan_publish_en:  true       # false: close all the point cloud output
     dense_publish_en: true       # false: low down the points number in a global-frame point clouds scan.
     scan_bodyframe_pub_en: true  # true: output the point cloud scans in IMU-body-frame
+    imu_correct_pub_en: false    # true: publish /imu_correct topic from /imu0 topic
 
 pcd_save:
     pcd_save_en: true
@@ -52,11 +57,12 @@ pcd_save:
 
 # Navsat (convert GPS coordinates to Cartesian)
 navsat:
-  frequency: 50
+  frequency: 10
   wait_for_datum: false
   delay: 0.0
   magnetic_declination_radians: 0
-  yaw_offset: 0
+  yaw_offset: 2   # default: 0 (rad)
+  # yaw_offset: 0
   zero_altitude: true
   broadcast_utm_transform: false
   broadcast_utm_transform_as_parent_frame: false
@@ -65,10 +71,14 @@ navsat:
 # EKF for Navsat
 ekf_gps:
   publish_tf: false
-  map_frame: map
-  odom_frame: odom
-  base_link_frame: base_link
-  world_frame: odom
+#   # map_frame: map
+#   odom_frame: camera_init
+#   base_link_frame: body
+#   world_frame: camera_init
+  # map_frame: map
+  odom_frame: camera_init
+  base_link_frame: body
+  world_frame: camera_init
 
   frequency: 50
   two_d_mode: false
@@ -76,7 +86,8 @@ ekf_gps:
   # -------------------------------------
   # External IMU:
   # -------------------------------------
-  imu0: imu_correct
+  imu0: imu/data
+  # imu0: imu_correct
   # make sure the input is aligned with ROS REP105. "imu_correct" is manually transformed by myself. EKF can also transform the data using tf between your imu and base_link
   imu0_config: [false, false, false,
                 true,  true,  true,
@@ -90,6 +101,7 @@ ekf_gps:
   # Odometry (From Navsat):
   # -------------------------------------
   odom0: odometry/gps
+  # odom0: Odometry # default: odometry/gps
   odom0_config: [true,  true,  true,
                  false, false, false,
                  false, false, false,

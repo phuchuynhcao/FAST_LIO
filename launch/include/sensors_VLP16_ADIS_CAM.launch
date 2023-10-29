@@ -1,0 +1,56 @@
+<launch>
+    <!-- Arguments -->
+    <arg name="rtk_en" default="false" />
+    <arg name="xsens_en" default="false" />
+    <arg name="camera_en" default="false" />
+    <arg name="cam_shutter_time" default="10" />  <!-- shutter-time [msec] -->
+    <arg name="use_slider" default="0" /> <!-- 0: no slider, 1: use slider-->
+    <arg name="dataset_directory" value="$(find fast_lio)/Dataset"/>
+    <arg name="is_recorded" default="false"/>
+    <!-- <rosparam file="$(find fast_lio)/config/params.yaml" command="load" /> -->
+
+    <node  name="xsens_mti_node" pkg="xsens_mti_driver" type="xsens_mti_node" output="screen" if="$(arg xsens_en)">
+        <rosparam command="load" file="$(find fast_lio)/config/xsens.yaml" />
+    </node>
+
+    <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch"/>
+
+    <include file="$(find nmea_navsat_driver)/launch/nmea_serial_driver.launch" if="$(arg rtk_en)">
+        <arg name="port" default="/dev/ttyUSB0"/>
+        <arg name="baud" default="115200"/>
+        <arg name="frame_id" default="rtk"/>
+        <remap from="/fix" to="rtk/fix"/>
+    </include>
+
+    <!-- Run trigger driver -->
+    <node pkg="devices" type="trigger_node" name="trigger_node" output="screen" if="$(arg imuADIS_en)"
+         args="/dev/ttyUSB0 $(arg cam_shutter_time) $(arg use_slider)" >
+    </node>
+
+    <!-- Run IMU driver-->
+    <node pkg="devices" type="imu_node" name="imu_node" args="/dev/ttyUSB1" /> 
+    
+    <!-- Run Stereo Camera driver -->
+    <node pkg="camera1394stereo" type="camera1394stereo_node" name="camera1394stereo_node" output="screen" >
+        <rosparam file="$(find camera1394stereo)/config/format7_mode3_trig.yaml" command="load"/>
+        <param name="my_shutter_time" value="$(arg cam_shutter_time)"/>
+        <remap from="stereo_camera/left/image_raw" to="cam0/image_raw" />
+        <remap from="stereo_camera/right/image_raw" to="cam1/image_raw" />
+    </node>
+    
+    <!-- Display raw (not rectified) image -->
+    <node pkg="image_view" type="image_view" name="image_view_cam0_raw">
+        <remap from="image" to="cam0/image_raw" />
+    </node>
+    <node pkg="image_view" type="image_view" name="image_view_cam1_raw">
+        <remap from="image" to="cam1/image_raw" />
+    </node>
+
+    <!-- Record bag -->
+    <!-- <node name="bag_record" pkg="rosbag" type="record"
+        args="record -o $(arg dataset_directory)/bag /imu/data /fix_rtk /gnss /velodyne_points /imu0 /cam0/image_raw /cam1/image_raw"
+        if="$(eval is_recorded)"/> -->
+    <node name="bag_record" pkg="rosbag" type="record"
+        args="record -o $(arg dataset_directory)/bag /velodyne_points /imu0 /cam0/image_raw /cam1/image_raw"
+        if="$(eval is_recorded)"/>
+</launch>

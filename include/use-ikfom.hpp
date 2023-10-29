@@ -55,6 +55,7 @@ Eigen::Matrix<double, 24, 1> get_f(state_ikfom &s, const input_ikfom &in)
 		res(i + 3) =  omega[i]; 
 		res(i + 12) = a_inertial[i] + s.grav[i]; 
 	}
+	// ROS_INFO("Gravitation: %lf %lf %lf\n", s.grav[0], s.grav[1], s.grav[2]);
 	return res;
 }
 

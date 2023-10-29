@@ -19,7 +19,6 @@ Panels:
         - /Odometry1/GPS1/Shape1
         - /Odometry1/RTK1
         - /Odometry1/RTK1/Shape1
-        - /Path1
         - /MarkerArray1/Namespaces1
       Splitter Ratio: 0.6432291865348816
     Tree Height: 777
@@ -290,7 +289,7 @@ Visualization Manager:
       Head Length: 0
       Length: 0.30000001192092896
       Line Style: Billboards
-      Line Width: 0.05000000074505806
+      Line Width: 0.20000000298023224
       Name: Path
       Offset:
         X: 0
@@ -375,7 +374,7 @@ Visualization Manager:
   Global Options:
     Background Color: 0; 0; 0
     Default Light: true
-    Fixed Frame: camera_init
+    Fixed Frame: odom
     Frame Rate: 10
   Name: root
   Tools:
@@ -416,7 +415,7 @@ Visualization Manager:
       Name: Current View
       Near Clip Distance: 0.009999999776482582
       Pitch: 0.7853981852531433
-      Target Frame: body
+      Target Frame: base_link
       Yaw: 0.7853981852531433
     Saved: ~
 Window Geometry:
